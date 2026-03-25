@@ -15,6 +15,7 @@ public class Envio {
     private Long id;
     private String trackingId;
     private String dni;
+
     private String nombre;
     private String apellido;
     private String direccion;

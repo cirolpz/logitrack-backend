@@ -15,7 +15,7 @@ public class EnvioController {
         this.service = service;
     }
     @PostMapping
-    public Envio crearEnvio(@RequestBody Envio envio) {
+    public Envio crearEnvio( @RequestBody Envio envio) {
         return service.crearEnvio(envio);
     }
     @GetMapping
@@ -26,5 +26,18 @@ public class EnvioController {
     @GetMapping("/{trackingId}")
     public Envio getEnvioByTrackingId(@PathVariable String trackingId) {
         return service.getEnvioByTrackingId(trackingId);
+    }
+
+    @PutMapping("/{trackingId}/estado")
+    public Envio actualizarEstado(
+            @PathVariable String trackingId,
+            @RequestParam String estado
+    ) {
+        return service.actualizarEstado(trackingId, estado);
+    }
+
+    @GetMapping("/buscar")
+    public List<Envio> buscarPorNombre(@RequestParam String nombre){
+        return service.buscarPorNombre(nombre);
     }
 }

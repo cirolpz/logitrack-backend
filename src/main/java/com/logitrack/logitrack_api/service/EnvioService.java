@@ -30,4 +30,18 @@ public class EnvioService {
         return repository.findByTrackingId(trackingId)
                 .orElseThrow(() -> new RuntimeException("Envío no encontrado"));
     }
+
+    public Envio actualizarEstado(String trackingId, String nuevoEstado) {
+
+        Envio envio = repository.findByTrackingId(trackingId)
+                .orElseThrow(() -> new RuntimeException("Envio no encontrado"));
+
+        envio.setEstado(nuevoEstado);
+
+        return repository.save(envio);
+    }
+
+    public List<Envio> buscarPorNombre(String nombre) {
+        return repository.findByNombre(nombre);
+    }
 }
