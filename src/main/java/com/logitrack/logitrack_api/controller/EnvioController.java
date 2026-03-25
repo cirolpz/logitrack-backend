@@ -2,6 +2,7 @@ package com.logitrack.logitrack_api.controller;
 
 import com.logitrack.logitrack_api.model.Envio;
 import com.logitrack.logitrack_api.service.EnvioService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,7 +16,7 @@ public class EnvioController {
         this.service = service;
     }
     @PostMapping
-    public Envio crearEnvio( @RequestBody Envio envio) {
+    public Envio crearEnvio( @Valid @RequestBody Envio envio) {
         return service.crearEnvio(envio);
     }
     @GetMapping
