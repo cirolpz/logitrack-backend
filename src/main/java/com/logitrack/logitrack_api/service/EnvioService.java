@@ -3,7 +3,10 @@ package com.logitrack.logitrack_api.service;
 import com.logitrack.logitrack_api.model.Envio;
 import com.logitrack.logitrack_api.model.EstadoEnvio;
 import com.logitrack.logitrack_api.repository.EnvioRepository;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+
 
 import java.util.List;
 import java.util.UUID;
@@ -19,7 +22,6 @@ public class EnvioService {
     public Envio crearEnvio(Envio envio) {
         envio.setTrackingId(UUID.randomUUID().toString());
         envio.setEstado(EstadoEnvio.REGISTRADO);
-        
         return repository.save(envio);
     }
 
@@ -29,12 +31,18 @@ public class EnvioService {
 
     public Envio getEnvioByTrackingId(String trackingId) {
         return repository.findByTrackingId(trackingId)
-                .orElseThrow(() -> new RuntimeException("Envío no encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Envio no encontrado"
+                ));
     }
 
     public Envio actualizarEstado(String trackingId, EstadoEnvio nuevoEstado){
         Envio envio = repository.findByTrackingId(trackingId)
-                .orElseThrow(() -> new RuntimeException("Envio no encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Envio no encontrado"
+                ));
 
         envio.setEstado(nuevoEstado);
 
@@ -42,6 +50,6 @@ public class EnvioService {
     }
 
     public List<Envio> buscarPorNombre(String nombre) {
-        return repository.findByNombre(nombre);
+        return repository.findByNombreContainingIgnoreCase(nombre);
     }
 }

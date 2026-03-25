@@ -8,5 +8,5 @@ import java.util.Optional;
 
 public interface EnvioRepository extends JpaRepository<Envio, Long> {
     Optional<Envio> findByTrackingId(String trackingId);
-    List<Envio> findByNombre(String nombre);
+    List<Envio> findByNombreContainingIgnoreCase(String nombre);
 }
