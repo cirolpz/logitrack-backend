@@ -7,6 +7,7 @@ import com.logitrack.logitrack_api.model.EstadoEnvio;
 import com.logitrack.logitrack_api.service.EnvioService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
+import io.swagger.v3.oas.annotations.Operation;
 
 import java.util.List;
 
@@ -18,6 +19,8 @@ public class EnvioController {
     public EnvioController(EnvioService service) {
         this.service = service;
     }
+
+    @Operation(summary = "Crear un nuevo envío")
     @PostMapping
     public EnvioResponseDTO crearEnvio(@Valid @RequestBody EnvioRequestDTO dto) {
         return service.crearEnvio(dto);
@@ -28,11 +31,12 @@ public class EnvioController {
         return service.obtenerTodos();
     }
 
+    @Operation(summary = "Obtener envío por trackingId")
     @GetMapping("/{trackingId}")
     public Envio getEnvioByTrackingId(@PathVariable String trackingId) {
         return service.getEnvioByTrackingId(trackingId);
     }
-
+    @Operation(summary = "Actualizar el estado de un envío")
     @PutMapping("/{trackingId}/estado")
     public Envio actualizarEstado(
             @PathVariable String trackingId,
@@ -40,7 +44,7 @@ public class EnvioController {
     ) {
         return service.actualizarEstado(trackingId, estado);
     }
-
+    @Operation(summary = "Buscar envíos por nombre")
     @GetMapping("/buscar")
     public List<Envio> buscarPorNombre(@RequestParam String nombre){
         return service.buscarPorNombre(nombre);
