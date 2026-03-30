@@ -271,22 +271,7 @@ El proyecto incluye un pipeline de **GitHub Actions** que ejecuta:
 
 ---
 
-# Convención de commits
-
-Se utiliza **Conventional Commits**.
-
-Ejemplos:
-
-```
-feat(envios): CRUD de envíos
-feat(api): documentación swagger
-feat(ia): integración con modelo RandomForest
-fix(envios): validación de estado
-docs: actualización README
-```
-
----
 
 # Autores
 
-Proyecto académico desarrollado por estudiantes de **Licenciatura en Sistemas – UNGS**.
+Proyecto académico desarrollado por Ciro Martín López, Karin Pellegrini y Melina Scabini, estudiantes de **Licenciatura en Sistemas – UNGS**.
