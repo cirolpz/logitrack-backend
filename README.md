@@ -16,7 +16,7 @@ El proyecto está compuesto por dos servicios principales:
 * **Spring Boot**
 * **Spring Data JPA**
 * **Maven**
-* **Swagger / OpenAPI**
+* **Swagger**
 
 Responsabilidades:
 
@@ -38,11 +38,10 @@ Responsabilidades:
 
 * cálculo de prioridad logística
 * estimación basada en:
-
   * distancia
   * peso
-  * tipo de envío
-
+  * tipo_envio
+  * prioridad
 ---
 
 # Estructura del repositorio
