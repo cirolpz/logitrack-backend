@@ -3,7 +3,6 @@ import json
 import sys
 import os
 
-# agregar la ruta donde está RandomForestIA.py
 sys.path.append(
     os.path.abspath(
         os.path.join(os.path.dirname(__file__), "../src/main/java/com/logitrack/logitrack_IA")
