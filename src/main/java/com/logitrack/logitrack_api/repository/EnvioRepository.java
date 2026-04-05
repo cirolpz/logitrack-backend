@@ -21,4 +21,6 @@ public interface EnvioRepository extends JpaRepository<Envio, Long> {
     List<Envio> findByFechaCreacionBetween(LocalDateTime desde, LocalDateTime hasta);
 
     List<Envio> findByAnonimizadoTrue();
+
+    long countByEstado(com.logitrack.logitrack_api.model.EstadoEnvio estado);
 }
