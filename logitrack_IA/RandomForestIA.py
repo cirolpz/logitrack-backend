@@ -53,7 +53,7 @@ def obtener_coordenadas(cp):
     params = {'postalcode': cp, 'country': 'Argentina', 'format': 'json', 'limit': 1}
     headers = {'User-Agent': 'LogiTrack_App_UNGS'}
     try:
-        response = requests.get(url, params=params, headers=headers)
+        response = requests.get(url, params=params, headers=headers, timeout=5)
         data = response.json()
         if data:
             lat = float(data[0]['lat'])
