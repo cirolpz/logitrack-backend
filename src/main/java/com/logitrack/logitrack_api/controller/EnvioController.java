@@ -6,10 +6,12 @@ import com.logitrack.logitrack_api.model.Envio;
 import com.logitrack.logitrack_api.model.EstadoEnvio;
 import com.logitrack.logitrack_api.service.EnvioService;
 import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.Operation;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/envios")
@@ -20,6 +22,11 @@ public class EnvioController {
 
     public EnvioController(EnvioService service) {
         this.service = service;
+    }
+
+    @GetMapping("/health")
+    public ResponseEntity<Map<String, String>> health() {
+        return ResponseEntity.ok(Map.of("status", "ok"));
     }
 
     @Operation(summary = "Crear un nuevo envío")

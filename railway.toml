@@ -4,6 +4,6 @@ dockerfilePath = "Dockerfile"
 
 [deploy]
 startCommand = "java -jar app.jar"
-healthcheckPath = "/api/envios"
+healthcheckPath = "/api/envios/health"
 healthcheckTimeout = 60
 restartPolicyType = "on_failure"
