@@ -9,6 +9,6 @@ import java.util.Optional;
 
 public interface EnvioRepository extends JpaRepository<Envio, Long> {
     Optional<Envio> findByTrackingId(String trackingId);
-    List<Envio> findByNombreContainingIgnoreCase(String nombre);
+    List<Envio> findByNombreContainingIgnoreCaseOrApellidoContainingIgnoreCase(String nombre, String apellido);
     List<Envio> findByFechaCreacionBetween(LocalDateTime desde, LocalDateTime hasta);
 }
