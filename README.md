@@ -1,161 +1,201 @@
-# LogiTrack – Backend & AI Routing System
+# LogiTrack – Backend & AI Microservice
 
-LogiTrack es un sistema de gestión de envíos logísticos desarrollado como trabajo práctico para la materia **Laboratorio de Construcción de Software (UNGS)**.
+![Java](https://img.shields.io/badge/Java_21-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot_3.4-6DB33F?style=for-the-badge&logo=springboot&logoColor=white)
+![Python](https://img.shields.io/badge/Python_3.11-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)
 
-El sistema permite registrar envíos, consultar su estado y calcular automáticamente la **prioridad logística** utilizando un modelo de **Machine Learning (Random Forest)**.
+Sistema de gestión de envíos logísticos desarrollado como Trabajo Práctico para **Laboratorio de Construcción de Software (UNGS)**.
 
----
-
-# Arquitectura del sistema
-
-El proyecto está compuesto por dos servicios principales:
-
-### Backend API
-
-* **Java 21**
-* **Spring Boot**
-* **Spring Data JPA**
-* **Maven**
-* **Swagger**
-
-Responsabilidades:
-
-* CRUD de envíos
-* gestión de estados logísticos
-* exposición de endpoints REST
-* integración con el servicio de Machine Learning
+Permite registrar envíos, gestionar su ciclo de vida, calcular prioridades con IA, auditar operaciones y ejercer derechos ARCO (Ley 25.326).
 
 ---
 
-### Servicio de Inteligencia Artificial
+## Arquitectura del sistema
 
-* **Python**
-* **Flask**
-* **scikit-learn**
-* **RandomForestClassifier**
+El repositorio contiene **dos servicios independientes** deployados en Railway:
 
-Responsabilidades:
+### 1. Backend API — Java / Spring Boot
 
-* cálculo de prioridad logística
-* estimación basada en:
-  * distancia
-  * peso
-  * tipo_envio
-  * prioridad
+| Tecnología | Versión |
+|---|---|
+| Java | 21 |
+| Spring Boot | 3.4.4 |
+| Spring Data JPA | — |
+| PostgreSQL (Supabase) | — |
+| Maven | — |
+| Swagger / OpenAPI | — |
+
+**Responsabilidades:**
+- CRUD de envíos con validación de CP (rango 1000–9499)
+- Gestión de estados logísticos con transiciones validadas
+- Registro de historial de cambios de estado con usuario y timestamp
+- Anonimización de datos personales (borrado lógico — Ley 25.326)
+- Cálculo de probabilidad de retraso por envío
+- Dashboard de auditoría con métricas de actividad
+- Integración HTTP con el microservicio de IA
+
+### 2. Microservicio IA — Python / Flask
+
+| Tecnología | Uso |
+|---|---|
+| Flask | API REST |
+| scikit-learn | RandomForestClassifier |
+| pandas / numpy | Generación y manejo del dataset |
+| Nominatim (OSM) | Geolocalización de CPs |
+
+**Responsabilidades:**
+- Predicción de prioridad (BAJA / MEDIA / ALTA)
+- Cálculo de distancia entre CPs usando Haversine
+- Entrenamiento con dataset sintético de 1200 registros
+- Re-entrenamiento en caliente sin downtime (`POST /retrain`)
+
 ---
 
-# Estructura del repositorio
+## Estructura del repositorio
 
 ```
-logitrack-backend
+logitrack-backend/
 │
-├ docs                # Documentación técnica
+├── logitrack_IA/
+│   ├── RandomForestIA.py      # Servicio Flask con endpoints /predict y /retrain
+│   ├── generar_dataset.py     # Generador de dataset sintético (US-30)
+│   ├── datasetIA.csv          # Dataset de entrenamiento (1200 registros)
+│   ├── requirements.txt
+│   ├── Dockerfile
+│   └── railway.toml
 │
-├ src
-│ ├ main
-│ │ ├ java
-│ │ │ └ com.logitrack_api
-│ │ │ └ com.logitrack_IA
-│ │ │ │ └  datasetIA.csv       # dataset de entrenamiento IA
-│ │ │ │ └  RandomForestIA.py   # servicio ML en Python
-│ │ └ resources
+├── src/
+│   └── main/
+│       ├── java/com/logitrack/logitrack_api/
+│       │   ├── config/        # DatosSemillas, CorsConfig
+│       │   ├── controller/    # EnvioController, DashboardController, HistorialController
+│       │   ├── dto/           # EnvioRequestDTO, EnvioResponseDTO
+│       │   ├── model/         # Envio, Usuario, HistorialEstado, EstadoEnvio
+│       │   ├── repository/    # EnvioRepository, UsuarioRepository, HistorialEstadoRepository
+│       │   └── service/       # EnvioService, UsuarioService
+│       └── resources/
+│           └── application.properties
 │
-│ └ test
-│
-│
-├ README.md
-├ CONTRIBUTING.md
-└ pom.xml
+├── tests/
+├── README.md
+├── CONTRIBUTING.md
+└── pom.xml
 ```
 
 ---
 
-# Estados de envío
+## Variables de entorno (Railway)
 
-Los envíos siguen el siguiente ciclo:
+| Variable | Descripción |
+|---|---|
+| `DATABASE_URL` | URL de conexión a Supabase (PostgreSQL) |
+| `DATABASE_USER` | Usuario de la base de datos |
+| `DATABASE_PASSWORD` | Contraseña de la base de datos |
+| `IA_SERVICE_URL` | URL del microservicio IA (ej: `https://logitrack-ia-xxx.railway.app`) |
+| `PORT` | Puerto dinámico asignado por Railway |
+
+---
+
+## Ciclo de vida de un envío
 
 ```
 REGISTRADO → EN_TRANSITO → EN_SUCURSAL → ENTREGADO
 ```
 
-El backend valida que **no se puedan realizar saltos inválidos de estado**.
-
-Ejemplo inválido:
-
-```
-REGISTRADO → ENTREGADO
-```
+El backend valida que no se puedan realizar saltos inválidos. Cada transición queda registrada en `HistorialEstado` con usuario y timestamp.
 
 ---
 
-# Endpoints principales
+## Endpoints principales
 
-## Crear envío
+### Envíos
 
-POST
+| Método | Endpoint | Descripción |
+|---|---|---|
+| `POST` | `/api/envios` | Crear envío (llama a la IA para prioridad y distancia) |
+| `GET` | `/api/envios` | Listar todos los envíos |
+| `GET` | `/api/envios/{trackingId}` | Obtener envío por ID |
+| `PUT` | `/api/envios/{trackingId}/estado` | Cambiar estado del envío |
+| `GET` | `/api/envios/buscar?nombre=` | Buscar por nombre/apellido/trackingId |
+| `GET` | `/api/envios/por-fecha?desde=&hasta=` | Filtrar por rango de fechas |
+| `GET` | `/api/envios/{trackingId}/historial` | Historial de cambios de estado |
+| `POST` | `/api/envios/{trackingId}/anonimizar` | Borrado lógico (Ley 25.326) |
+| `GET` | `/api/envios/solicitudes-borrado` | Envíos anonimizados (solo Supervisor) |
 
-```
-/api/envios
-```
+### Dashboard y Auditoría
 
-Body:
+| Método | Endpoint | Descripción |
+|---|---|---|
+| `GET` | `/api/dashboard/resumen` | Métricas: totales, por estado, actividad reciente |
+| `GET` | `/api/historial/buscar?usuario=&accion=` | Búsqueda de logs de auditoría |
 
+### Microservicio IA
+
+| Método | Endpoint | Descripción |
+|---|---|---|
+| `GET` | `/health` | Healthcheck |
+| `POST` | `/predict` | Predecir prioridad y calcular distancia |
+| `POST` | `/retrain` | Re-entrenar modelo sin downtime |
+
+**Body de `/predict`:**
 ```json
 {
- "dni": "40123456",
- "nombre": "Juan",
- "apellido": "Perez",
- "direccion": "Av Siempre Viva 742",
- "codigoPostal": "1704",
- "peso": 2.5
+  "cp_origen": "1663",
+  "cp_destino": "7000",
+  "peso": 15.0,
+  "tipo_envio": "Medica"
+}
+```
+
+**Respuesta:**
+```json
+{
+  "prioridad": "ALTA",
+  "distanciaKm": 385.2
 }
 ```
 
 ---
 
-## Obtener todos los envíos
+## Dataset sintético (US-28 / US-30)
 
-GET
+El modelo se entrena con **1200 registros sintéticos** generados por `generar_dataset.py`.
 
-```
-/api/envios
-```
+**Reglas de negocio aplicadas:**
 
----
+| Condición | Prioridad |
+|---|---|
+| Tipo == Peligrosa | ALTA |
+| Tipo == Médica y (peso > 5 ó dist > 100) | ALTA |
+| Tipo Estándar/Frágil, peso > 15 y dist > 200 | ALTA |
+| Tipo Estándar/Frágil, peso ≥ 5 ó dist ≥ 50 | MEDIA |
+| Tipo Estándar/Frágil, peso < 5 y dist < 50 | BAJA |
 
-## Obtener envío por trackingId
-
-GET
-
-```
-/api/envios/{trackingId}
-```
+Distribución: ~30% BAJA / ~50% MEDIA / ~20% ALTA
 
 ---
 
-## Cambiar estado del envío
+## Ejecutar en local
 
-PUT
+### 1. Microservicio IA
 
-```
-/api/envios/{trackingId}/estado?estado=EN_TRANSITO
-```
-
----
-
-## Buscar envíos por nombre
-
-GET
-
-```
-/api/envios/buscar?nombre=juan
+```bash
+cd logitrack_IA
+pip install -r requirements.txt
+python RandomForestIA.py
+# Disponible en http://localhost:5001
 ```
 
----
+### 2. Backend
 
-# API Documentation
+```bash
+# Configurar variables de entorno o application.properties
+mvn spring-boot:run
+# Disponible en http://localhost:8080
+```
 
-Swagger UI disponible en:
+### Swagger UI
 
 ```
 http://localhost:8080/swagger-ui/index.html
@@ -163,115 +203,16 @@ http://localhost:8080/swagger-ui/index.html
 
 ---
 
-# Servicio de Machine Learning
+## Datos semilla
 
-El servicio IA utiliza un modelo **RandomForestClassifier** entrenado con datos logísticos.
-
-Variables utilizadas:
-
-* distancia entre códigos postales
-* peso del paquete
-* tipo de envío
-
-Tipos de envío:
-
-```
-Estandar
-Fragil
-Medica
-Peligrosa
-```
-
-El modelo predice la prioridad:
-
-```
-BAJA
-MEDIA
-ALTA
-```
-
-Endpoint del modelo:
-
-```
-POST /predict
-```
-
-Ejemplo request:
-
-```json
-{
- "cp_origen": "1704",
- "cp_destino": "2000",
- "peso": 5,
- "tipo_envio": "Fragil"
-}
-```
-
-Respuesta:
-
-```json
-{
- "prioridad": "MEDIA"
-}
-```
+Al iniciar con BD vacía se crean automáticamente:
+- **2 usuarios**: `melina` (Operador, clave: `1234`) y `ciro` (Supervisor, clave: `admin`)
+- **3 envíos de prueba** con distintos estados, prioridades y motivos
 
 ---
 
-# Ejecutar el proyecto
+## Autores
 
-## 1 – Ejecutar el modelo de IA
-
-Instalar dependencias:
-
-```
-pip install flask pandas scikit-learn requests numpy
-```
-
-Ejecutar:
-
-```
-python RandomForestIA.py
-```
-
-El servicio quedará disponible en:
-
-```
-http://localhost:5001
-```
-
----
-
-## 2 – Ejecutar el backend
-
-```
-mvn spring-boot:run
-```
-
-El backend correrá en:
-
-```
-http://localhost:8080
-```
-
----
-
-# Datos semilla
-
-Al iniciar el backend se generan automáticamente **envíos de prueba** para facilitar el testing del sistema.
-
----
-
-# Pipeline CI
-
-El proyecto incluye un pipeline de **GitHub Actions** que ejecuta:
-
-* build del proyecto
-* ejecución de tests
-* verificación del código
-
----
-
-
-# Autores
-
-Proyecto académico desarrollado por Ciro Martín López, Karin Pellegrini y Melina Scabini, estudiantes de **Licenciatura en Sistemas – UNGS**.
+Proyecto académico — **Grupo 6**
+Ciro Martín López, Karin Pellegrini, Melina Scabini
+Licenciatura en Sistemas — UNGS
