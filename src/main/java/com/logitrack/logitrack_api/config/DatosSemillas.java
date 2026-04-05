@@ -2,10 +2,13 @@ package com.logitrack.logitrack_api.config;
 
 import com.logitrack.logitrack_api.model.Envio;
 import com.logitrack.logitrack_api.model.EstadoEnvio;
+import com.logitrack.logitrack_api.model.Usuario;
 import com.logitrack.logitrack_api.repository.EnvioRepository;
+import com.logitrack.logitrack_api.repository.UsuarioRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -13,9 +16,30 @@ import java.util.UUID;
 @Configuration
 public class DatosSemillas {
 
+    private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+
     @Bean
-    CommandLineRunner initDatabase(EnvioRepository repository) {
+    CommandLineRunner initDatabase(EnvioRepository repository, UsuarioRepository usuarioRepository) {
         return args -> {
+
+            if (usuarioRepository.count() == 0) {
+                Usuario melina = new Usuario();
+                melina.setUsuario("melina");
+                melina.setClave(encoder.encode("1234"));
+                melina.setNombre("Melina");
+                melina.setApellido("Scabini");
+                melina.setRol("Operador");
+
+                Usuario ciro = new Usuario();
+                ciro.setUsuario("ciro");
+                ciro.setClave(encoder.encode("admin"));
+                ciro.setNombre("Ciro");
+                ciro.setApellido("López");
+                ciro.setRol("Supervisor");
+
+                usuarioRepository.save(melina);
+                usuarioRepository.save(ciro);
+            }
 
             if (repository.count() == 0) {
 
