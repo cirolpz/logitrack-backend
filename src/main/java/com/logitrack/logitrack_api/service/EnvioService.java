@@ -35,6 +35,8 @@ public class EnvioService {
     }
 
     public EnvioResponseDTO crearEnvio(EnvioRequestDTO dto) {
+        validarCodigoPostal(dto.getCodigoPostalOrigen(), "origen");
+        validarCodigoPostal(dto.getCodigoPostalDestino(), "destino");
 
         Envio envio = new Envio();
         envio.setTrackingId(UUID.randomUUID().toString());
@@ -156,6 +158,19 @@ public class EnvioService {
             case EN_SUCURSAL -> nuevo == EstadoEnvio.ENTREGADO;
             case ENTREGADO -> false;
         };
+    }
+
+    private void validarCodigoPostal(String cp, String campo) {
+        try {
+            int n = Integer.parseInt(cp);
+            if (n < 1000 || n > 9499) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "El CP de " + campo + " (" + cp + ") está fuera del rango válido argentino (1000-9499).");
+            }
+        } catch (NumberFormatException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                "El CP de " + campo + " debe ser numérico.");
+        }
     }
 
     private String generarMotivoPrioridad(Double distanciaKm, Double peso, String tipoEnvio, String prioridad) {
