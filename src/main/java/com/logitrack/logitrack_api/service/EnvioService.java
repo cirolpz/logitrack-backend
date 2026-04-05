@@ -16,6 +16,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Duration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -74,8 +75,11 @@ public class EnvioService {
     private Map<String, Object> consultarIA(EnvioRequestDTO dto) {
         Map<String, Object> fallback = new HashMap<>();
         fallback.put("prioridad", "BAJA");
+        fallback.put("distanciaKm", 300.0);
         try {
-            HttpClient client = HttpClient.newHttpClient();
+            HttpClient client = HttpClient.newBuilder()
+                    .connectTimeout(Duration.ofSeconds(10))
+                    .build();
             ObjectMapper mapper = new ObjectMapper();
 
             String tipoEnvio = dto.getTipoEnvio() != null ? dto.getTipoEnvio() : "Estandar";
@@ -90,6 +94,7 @@ public class EnvioService {
 
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(iaServiceUrl + "/predict"))
+                    .timeout(Duration.ofSeconds(30))
                     .header("Content-Type", "application/json")
                     .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
                     .build();
