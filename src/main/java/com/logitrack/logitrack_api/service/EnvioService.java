@@ -170,8 +170,12 @@ public class EnvioService {
             case "ALTA" -> esMedico
                 ? String.format("Envío de tipo médico/urgente (%s) con %s (%s). Requiere atención prioritaria.", pesoStr, descDist, distStr)
                 : String.format("Envío %s (%s) con %s (%s). Requiere atención prioritaria.", descPeso, pesoStr, descDist, distStr);
-            case "MEDIA" -> String.format("Envío %s (%s) a %s (%s). Prioridad estándar.", descPeso, pesoStr, descDist, distStr);
-            default -> String.format("Envío %s (%s) de %s (%s). Sin urgencia especial.", descPeso, pesoStr, descDist, distStr);
+            case "MEDIA" -> esMedico
+                ? String.format("Envío de tipo médico/urgente (%s) a %s (%s). Atención preferente.", pesoStr, descDist, distStr)
+                : String.format("Envío %s (%s) a %s (%s). Prioridad estándar.", descPeso, pesoStr, descDist, distStr);
+            default -> esMedico
+                ? String.format("Envío de tipo médico/urgente (%s) de %s (%s). Requiere manejo especial.", pesoStr, descDist, distStr)
+                : String.format("Envío %s (%s) de %s (%s). Sin urgencia especial.", descPeso, pesoStr, descDist, distStr);
         };
     }
 }
