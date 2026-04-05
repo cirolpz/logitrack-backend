@@ -11,6 +11,11 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Table(indexes = {
+    @Index(name = "idx_envio_tracking_id", columnList = "trackingId"),
+    @Index(name = "idx_envio_nombre",      columnList = "nombre"),
+    @Index(name = "idx_envio_apellido",    columnList = "apellido")
+})
 public class Envio {
 
     @Id
